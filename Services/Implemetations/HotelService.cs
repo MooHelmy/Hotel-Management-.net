@@ -33,7 +33,7 @@ public class HotelService(IGeneric<Hotel> hotelInterface) : IHotelService
     {
         var hotel = await hotelInterface.GetByIdAsync(id, h => h.Amenities);
 
-        return hotel.HotelToDtoMapper();
+        return hotel!.HotelToDtoMapper();
     }
 
     public async Task<ServicesResponse?> UpdateAsync(int id, HotelDTO dto)
