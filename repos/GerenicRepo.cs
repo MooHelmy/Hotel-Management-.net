@@ -55,3 +55,4 @@ public class GenericRepo<TEntity>(ApplicationDbContext Context) : IGeneric<TEnti
         return await Context.SaveChangesAsync();
     }
 }
+
