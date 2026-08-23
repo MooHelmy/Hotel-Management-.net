@@ -83,4 +83,31 @@ public static class ExtensionMethod
         HotelName = r.Hotel?.Name ?? string.Empty,
         Amenities = r.Amenities.Select(a => a.Name).ToList()
     };
+    public static Guest GuestToEntityMapper(this GuestDTO dto)
+    {
+        return new Guest
+        {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            PhoneNumber = dto.PhoneNumber,
+            NationalIdOrPassport = dto.NationalIdOrPassport,
+            DateOfBirth = dto.DateOfBirth,
+            Address = dto.Address
+        };
+    }
+    public static GuestDTO GuestToDtoMapper(this Guest guest)
+    {
+        return new GuestDTO
+        {
+            Id = guest.Id,
+            FirstName = guest.FirstName,
+            LastName = guest.LastName,
+            Email = guest.Email,
+            PhoneNumber = guest.PhoneNumber,
+            NationalIdOrPassport = guest.NationalIdOrPassport,
+            DateOfBirth = guest.DateOfBirth,
+            Address = guest.Address
+        };
+    }
 }
