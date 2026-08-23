@@ -4,7 +4,7 @@ namespace HotelManagement.Entities
 {
     public class Amenity
     {
-        //Amenity هو عبارة عن مر
+        //Amenity (الخدمات ووسائل الراحة) فتمثل المرافق والمنتجات المجانية أو الإضافية التي يقدمها الفندق لإسعاد الضيوف ورفع مستوى راحتهم وولائهم للمكان
         [Key]
         public int Id { get; set; }
 

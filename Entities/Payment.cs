@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using HotelManagement.Entities;
 
 public class Payment
 {
@@ -25,4 +26,4 @@ public class Payment
     public int ReservationId { get; set; }
     public Reservation Reservation { get; set; } = null!;
 }
-}
+

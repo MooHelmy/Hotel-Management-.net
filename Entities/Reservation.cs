@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HotelManagement.Entities
 {
-    // Reservation عبارة عن حجز الحجز المبيع للسكان والمناصب والعروض والاستفسارات
+    //يمثل عملية تسجيل وتأكيد غرف أو خدمات الضيوف مسبقاً لضمان إدارة الإشغال بدقة
     public class Reservation
     {
         [Key]

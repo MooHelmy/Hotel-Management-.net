@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HotelManagement.Entities;
 
 public class Guest
 {
@@ -27,5 +28,5 @@ public class Guest
 
     // Navigation property
     public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-}
+
 }
