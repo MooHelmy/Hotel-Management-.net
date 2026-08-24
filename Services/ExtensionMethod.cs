@@ -127,4 +127,41 @@ public static class ExtensionMethod
         return existinghotel;
 
     }
+    public static Room ApplyUpdateTo(this RoomDTO room, Room existingRoom)
+    {
+        if (room.RoomNumber != null) existingRoom.RoomNumber = room.RoomNumber;
+        if (room.RoomType != null) existingRoom.RoomType = Enum.Parse<RoomType>(room.RoomType, true);
+        if (room.Status != null) existingRoom.Status = Enum.TryParse<RoomStatus>(room.Status, true, out var status)
+            ? status : RoomStatus.Available;
+        if (room.PricePerNight != 0) existingRoom.PricePerNight = room.PricePerNight;
+        if (room.Floor != null) existingRoom.Floor = room.Floor;
+        if (room.Capacity != null) existingRoom.Capacity = room.Capacity;
+        if (room.HotelId != 0) existingRoom.HotelId = room.HotelId;
+        if (room.HotelName != null) existingRoom.Hotel = new Hotel
+        {
+            Id = room.HotelId,
+            Name = room.HotelName
+        };
+        if (room.Amenities != null) existingRoom.Amenities = room.Amenities.Select(a => new Amenity
+        {
+            Name = a
+        }).ToList();
+
+        return existingRoom;
+
+    }
+    public static Guest ApplyUpdateTo(this GuestDTO guest, Guest existingGuest)
+    {
+        if (guest.FirstName != null) existingGuest.FirstName = guest.FirstName;
+        if (guest.LastName != null) existingGuest.LastName = guest.LastName;
+        if (guest.Email != null) existingGuest.Email = guest.Email;
+        if (guest.PhoneNumber != null) existingGuest.PhoneNumber = guest.PhoneNumber;
+        if (guest.NationalIdOrPassport != null) existingGuest.NationalIdOrPassport = guest.NationalIdOrPassport;
+        if (guest.DateOfBirth != null) existingGuest.DateOfBirth = guest.DateOfBirth;
+        if (guest.Address != null) existingGuest.Address = guest.Address;
+
+        return existingGuest;
+    }
+
+
 }

@@ -83,7 +83,8 @@ public class RoomRepository(IGeneric<Room> roomInterface, ApplicationDbContext C
         {
             return new ServicesResponse(false, "Room not Found");
         }
-        var result = await roomInterface.UpdateAsync(dto.RoomToEntityMapper());
+        var updatedRoom = dto.ApplyUpdateTo(existingRoom);
+        var result = await roomInterface.UpdateAsync(updatedRoom);
         return result > 0 ? new ServicesResponse(true, "Room updated successfully ")
         : new ServicesResponse(true, "Room not updated  ");
     }

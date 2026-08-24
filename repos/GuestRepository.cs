@@ -56,7 +56,8 @@ public class GuestRepository(IGeneric<Guest> GuestInterface, ApplicationDbContex
         {
             throw new ItemNotFoundException($"Guest with id {id} not found");
         }
-        var ret = await GuestInterface.UpdateAsync(dto.GuestToEntityMapper());
+        var updatedGuest = dto.ApplyUpdateTo(guest);
+        var ret = await GuestInterface.UpdateAsync(updatedGuest);
         return ret > 0 ? new ServicesResponse(true, "Guest updated successfully ")
         : new ServicesResponse(true, "Guest not updated  ");
     }
