@@ -85,6 +85,8 @@ public static class ServicesContainer
         services.AddScoped<IRoomService, RoomRepository>();
         services.AddScoped<RoomService>();
         services.AddScoped<IAmenityService, AmenityRepository>();
+        services.AddScoped<IEmployeeService, EmployeeRepository>();
+        services.AddScoped<EmployeeService>();
 
         return services;
     }

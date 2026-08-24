@@ -5,7 +5,7 @@ public interface IEmployeeService
     Task<IEnumerable<EmployeeDTO>> GetAllAsync();
     Task<EmployeeDTO?> GetByIdAsync(int id);
     Task<IEnumerable<EmployeeDTO>> GetByHotelAsync(int hotelId);
-    Task<EmployeeDTO> CreateAsync(EmployeeDTO dto);
-    Task<EmployeeDTO?> UpdateAsync(int id, EmployeeDTO dto);
-    Task<bool> DeleteAsync(int id);
+    Task<ServicesResponse> CreateAsync(EmployeeDTO dto);
+    Task<ServicesResponse?> UpdateAsync(int id, EmployeeDTO dto);
+    Task<ServicesResponse> DeleteAsync(int id);
 }

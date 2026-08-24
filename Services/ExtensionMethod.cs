@@ -232,4 +232,57 @@ public static class ExtensionMethod
 
         return existingGuest;
     }
+    // ============================================================
+    // Employee
+    // ============================================================
+
+    public static Employee EmployeeToEntityMapper(this EmployeeDTO dto)
+    {
+        return new Employee
+        {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            PhoneNumber = dto.PhoneNumber,
+            Position = dto.Position,
+            Department = dto.Department,
+            Salary = dto.Salary,
+            HireDate = dto.HireDate,
+            HotelId = dto.HotelId
+        };
+    }
+
+    public static EmployeeDTO EmployeeToDtoMapper(this Employee employee)
+    {
+        return new EmployeeDTO
+        {
+            Id = employee.Id,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            Email = employee.Email,
+            PhoneNumber = employee.PhoneNumber,
+            Position = employee.Position,
+            Department = employee.Department,
+            Salary = employee.Salary,
+            HireDate = employee.HireDate,
+            HotelId = employee.HotelId,
+            // Safe-guard: if the caller forgot .Include(e => e.Hotel),
+            // employee.Hotel may be null instead of an empty collection.
+        };
+    }
+
+    public static Employee ApplyUpdateTo(this EmployeeDTO dto, Employee existingEmployee)
+    {
+        if (!string.IsNullOrEmpty(dto.FirstName)) existingEmployee.FirstName = dto.FirstName;
+        if (!string.IsNullOrEmpty(dto.LastName)) existingEmployee.LastName = dto.LastName;
+        if (!string.IsNullOrEmpty(dto.Email)) existingEmployee.Email = dto.Email;
+        if (!string.IsNullOrEmpty(dto.PhoneNumber)) existingEmployee.PhoneNumber = dto.PhoneNumber;
+        if (!string.IsNullOrEmpty(dto.Position)) existingEmployee.Position = dto.Position;
+        if (!string.IsNullOrEmpty(dto.Department)) existingEmployee.Department = dto.Department;
+        if (dto.Salary != null) existingEmployee.Salary = dto.Salary;
+        if (dto.HireDate != null) existingEmployee.HireDate = dto.HireDate;
+        if (dto.HotelId != 0) existingEmployee.HotelId = dto.HotelId;
+
+        return existingEmployee;
+    }
 }
