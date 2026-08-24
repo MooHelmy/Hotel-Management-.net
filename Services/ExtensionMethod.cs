@@ -7,7 +7,7 @@ public static class ExtensionMethod
     {
         return new Hotel
         {
-            Name = dto.Name,
+            Name = dto.Name ?? string.Empty,
             Address = dto.Address,
             City = dto.City,
             Country = dto.Country,
@@ -109,5 +109,22 @@ public static class ExtensionMethod
             DateOfBirth = guest.DateOfBirth,
             Address = guest.Address
         };
+    }
+    public static Hotel ApplyUpdateTo(this HotelDTO hotel, Hotel existinghotel)
+    {
+        if (hotel.Name != null) existinghotel.Name = hotel.Name;
+        if (hotel.Address != null) existinghotel.Address = hotel.Address;
+        if (hotel.City != null) existinghotel.City = hotel.City;
+        if (hotel.Country != null) existinghotel.Country = hotel.Country;
+        if (hotel.PhoneNumber != null) existinghotel.PhoneNumber = hotel.PhoneNumber;
+        if (hotel.Email != null) existinghotel.Email = hotel.Email;
+        if (hotel.StarRating.HasValue) existinghotel.StarRating = hotel.StarRating.Value;
+        if (hotel.Amenities != null) existinghotel.Amenities = hotel.Amenities.Select(a => new Amenity
+        {
+            Name = a
+        }).ToList();
+
+        return existinghotel;
+
     }
 }

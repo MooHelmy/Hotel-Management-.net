@@ -43,7 +43,8 @@ public class HotelService(IGeneric<Hotel> hotelInterface) : IHotelService
         {
             return new ServicesResponse(false, "Hotel not found");
         }
-        var result = await hotelInterface.UpdateAsync(existinghotel);
+        var updatedHotel = dto.ApplyUpdateTo(existinghotel);
+        var result = await hotelInterface.UpdateAsync(updatedHotel);
         return result > 0 ? new ServicesResponse(true, "Hotel updated successfully ")
         : new ServicesResponse(true, "Hotel not updated  ");
     }
