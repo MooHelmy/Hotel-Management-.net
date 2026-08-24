@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class initialCreate : Migration
+    public partial class SomeMigrationName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -79,13 +79,13 @@ namespace HotelManagement.Migrations
                         column: x => x.AmenitiesId,
                         principalTable: "Amenities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_AmenityHotel_Hotels_HotelsId",
                         column: x => x.HotelsId,
                         principalTable: "Hotels",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -112,7 +112,7 @@ namespace HotelManagement.Migrations
                         column: x => x.HotelId,
                         principalTable: "Hotels",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

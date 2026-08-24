@@ -2,7 +2,7 @@ using HotelManagement.DTOs;
 using HotelManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class HotelService(IGeneric<Hotel> hotelInterface, ApplicationDbContext Context) : IHotelService
+public class HotelService(IGeneric<Hotel> hotelInterface, ApplicationDbContext Context, IAmenityService amenityRepo) : IHotelService
 {
     public async Task<ServicesResponse> CreateAsync(HotelDTO dto)
     {
@@ -10,16 +10,13 @@ public class HotelService(IGeneric<Hotel> hotelInterface, ApplicationDbContext C
 
         if (dto.Amenities is { Count: > 0 })
         {
-            hotel.Amenities = await Context.Amenities
-                .Where(a => dto.Amenities.Contains(a.Name))
-                .ToListAsync();
+            hotel.Amenities = await amenityRepo.FindOrCreateAsync(dto.Amenities);
         }
 
         var result = await hotelInterface.CreateAsync(hotel);
         return result > 0 ? new ServicesResponse(true, "The Hotel Created Successfully")
            : new ServicesResponse(false, "The Hotel Creation Failed");
     }
-
     public async Task<ServicesResponse> DeleteAsync(int id)
     {
         var result = await hotelInterface.DeleteAsync(id);
@@ -61,9 +58,7 @@ public class HotelService(IGeneric<Hotel> hotelInterface, ApplicationDbContext C
 
         if (dto.Amenities is { Count: > 0 })
         {
-            updatedHotel.Amenities = await Context.Amenities
-                .Where(a => dto.Amenities.Contains(a.Name))
-                .ToListAsync();
+            updatedHotel.Amenities = await amenityRepo.FindOrCreateAsync(dto.Amenities);
         }
 
         var result = await hotelInterface.UpdateAsync(updatedHotel);

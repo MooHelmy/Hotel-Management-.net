@@ -72,8 +72,7 @@ public static class ServicesContainer
         services.AddScoped<IGeneric<Reservation>, GenericRepo<Reservation>>();
         services.AddScoped<IGeneric<Employee>, GenericRepo<Employee>>();
         services.AddScoped<IGeneric<Amenity>, GenericRepo<Amenity>>();
-        services.AddScoped<IGeneric<Reservation>, GenericRepo<Reservation>>();
-        services.AddScoped<IGeneric<Payment>, GenericRepo<Payment>>();
+
 
 
         // Application Services
@@ -85,9 +84,7 @@ public static class ServicesContainer
         services.AddScoped<GuestService>();
         services.AddScoped<IRoomService, RoomRepository>();
         services.AddScoped<RoomService>();
-
-
-
+        services.AddScoped<IAmenityService, AmenityRepository>();
 
         return services;
     }
