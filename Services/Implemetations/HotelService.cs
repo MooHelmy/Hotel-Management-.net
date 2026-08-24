@@ -2,7 +2,7 @@ using HotelManagement.DTOs;
 using HotelManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class HotelService(IGeneric<Hotel> hotelInterface, ApplicationDbContext Context, IAmenityService amenityRepo) : IHotelService
+public class HotelService(IGeneric<Hotel> hotelInterface, IAmenityService amenityRepo) : IHotelService
 {
     public async Task<ServicesResponse> CreateAsync(HotelDTO dto)
     {

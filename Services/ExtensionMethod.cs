@@ -62,8 +62,8 @@ public static class ExtensionMethod
     /// </summary>
     public static Hotel ApplyUpdateTo(this HotelDTO dto, Hotel existingHotel, IEnumerable<Amenity>? resolvedAmenities = null)
     {
-        if (dto.Name != null) existingHotel.Name = dto.Name;
-        if (dto.Address != null) existingHotel.Address = dto.Address;
+        if (!string.IsNullOrEmpty(dto.Name)) existingHotel.Name = dto.Name;
+        if (!string.IsNullOrEmpty(dto.Address)) existingHotel.Address = dto.Address;
         if (dto.City != null) existingHotel.City = dto.City;
         if (dto.Country != null) existingHotel.Country = dto.Country;
         if (dto.PhoneNumber != null) existingHotel.PhoneNumber = dto.PhoneNumber;
@@ -222,13 +222,13 @@ public static class ExtensionMethod
 
     public static Guest ApplyUpdateTo(this GuestDTO dto, Guest existingGuest)
     {
-        if (dto.FirstName != null) existingGuest.FirstName = dto.FirstName;
-        if (dto.LastName != null) existingGuest.LastName = dto.LastName;
-        if (dto.Email != null) existingGuest.Email = dto.Email;
-        if (dto.PhoneNumber != null) existingGuest.PhoneNumber = dto.PhoneNumber;
-        if (dto.NationalIdOrPassport != null) existingGuest.NationalIdOrPassport = dto.NationalIdOrPassport;
-        if (dto.DateOfBirth != null) existingGuest.DateOfBirth = dto.DateOfBirth;
-        if (dto.Address != null) existingGuest.Address = dto.Address;
+        if (!string.IsNullOrEmpty(dto.FirstName)) existingGuest.FirstName = dto.FirstName;
+        if (!string.IsNullOrEmpty(dto.LastName)) existingGuest.LastName = dto.LastName;
+        if (!string.IsNullOrEmpty(dto.Email)) existingGuest.Email = dto.Email;
+        if (!string.IsNullOrEmpty(dto.PhoneNumber)) existingGuest.PhoneNumber = dto.PhoneNumber;
+        if (!string.IsNullOrEmpty(dto.NationalIdOrPassport)) existingGuest.NationalIdOrPassport = dto.NationalIdOrPassport;
+        if (dto.DateOfBirth != null) existingGuest.DateOfBirth = dto.DateOfBirth.Value;
+        if (!string.IsNullOrEmpty(dto.Address)) existingGuest.Address = dto.Address;
 
         return existingGuest;
     }

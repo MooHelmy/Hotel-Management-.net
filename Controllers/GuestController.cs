@@ -1,7 +1,6 @@
 using HotelManagement.DTOs;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
-[Route("api/[controller]")]
 public class GuestController(IGuestService guestService) : ControllerBase
 {
     [HttpGet("All")]
