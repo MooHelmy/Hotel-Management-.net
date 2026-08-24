@@ -7,7 +7,15 @@ public class RoomRepository(IGeneric<Room> roomInterface, ApplicationDbContext C
     public async Task<ServicesResponse> CreateAsync(RoomDTO dto)
     {
         var room = dto.RoomToEntityMapper();
+        if (dto.Amenities is { Count: > 0 })   // 2. لو فيه Amenities جاية من الـ request
+        {
+            room.Amenities = await Context.Amenities
+                .Where(a => dto.Amenities.Contains(a.Name))
+                .ToListAsync();                 // 3. هات الموجود فعلاً واربطه بالأوضة
+        }
+
         var result = await roomInterface.CreateAsync(room);
+
         return result > 0 ? new ServicesResponse(true, "The Room Created Successfully")
            : new ServicesResponse(false, "The Room Creation Failed");
 

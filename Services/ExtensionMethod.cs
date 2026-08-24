@@ -3,9 +3,22 @@ using HotelManagement.Entities;
 
 public static class ExtensionMethod
 {
-    public static Hotel HotelToEntityMapper(this HotelDTO dto)
+    // ============================================================
+    // Hotel
+    // ============================================================
+
+    /// <summary>
+    /// Maps a HotelDTO to a new Hotel entity.
+    /// Amenities are NOT resolved here because this is a static mapper
+    /// with no DbContext access. If the hotel has amenities, resolve the
+    /// existing Amenity rows in the repository first (find-or-create),
+    /// then pass them in via <paramref name="resolvedAmenities"/>.
+    /// Passing raw DTO strings straight into `new Amenity { Name = ... }`
+    /// causes EF Core to insert duplicate rows for names that already exist.
+    /// </summary>
+    public static Hotel HotelToEntityMapper(this HotelDTO dto, IEnumerable<Amenity>? resolvedAmenities = null)
     {
-        return new Hotel
+        var hotel = new Hotel
         {
             Name = dto.Name ?? string.Empty,
             Address = dto.Address,
@@ -15,7 +28,15 @@ public static class ExtensionMethod
             Email = dto.Email,
             StarRating = dto.StarRating
         };
+
+        if (resolvedAmenities != null)
+        {
+            hotel.Amenities = resolvedAmenities.ToList();
+        }
+
+        return hotel;
     }
+
     public static HotelDTO HotelToDtoMapper(this Hotel hotel)
     {
         return new HotelDTO
@@ -28,32 +49,78 @@ public static class ExtensionMethod
             PhoneNumber = hotel.PhoneNumber,
             Email = hotel.Email,
             StarRating = hotel.StarRating,
-            Amenities = hotel.Amenities.Select(a => a.Name).ToList()
+            // Safe-guard: if the caller forgot .Include(h => h.Amenities),
+            // hotel.Amenities may be null instead of an empty collection.
+            Amenities = hotel.Amenities?.Select(a => a.Name).ToList() ?? []
         };
     }
-    public static Room RoomToEntityMapper(this RoomDTO dto)
+
+    /// <summary>
+    /// Applies partial updates from a HotelDTO onto an existing tracked Hotel.
+    /// Amenities are only replaced if resolvedAmenities is supplied — resolve
+    /// them in the repository first, same reasoning as HotelToEntityMapper.
+    /// </summary>
+    public static Hotel ApplyUpdateTo(this HotelDTO dto, Hotel existingHotel, IEnumerable<Amenity>? resolvedAmenities = null)
     {
-        return new Room
+        if (dto.Name != null) existingHotel.Name = dto.Name;
+        if (dto.Address != null) existingHotel.Address = dto.Address;
+        if (dto.City != null) existingHotel.City = dto.City;
+        if (dto.Country != null) existingHotel.Country = dto.Country;
+        if (dto.PhoneNumber != null) existingHotel.PhoneNumber = dto.PhoneNumber;
+        if (dto.Email != null) existingHotel.Email = dto.Email;
+        if (dto.StarRating.HasValue) existingHotel.StarRating = dto.StarRating.Value;
+
+        if (resolvedAmenities != null)
+        {
+            existingHotel.Amenities = resolvedAmenities.ToList();
+        }
+
+        return existingHotel;
+    }
+
+    // ============================================================
+    // Room
+    // ============================================================
+
+    /// <summary>
+    /// Maps a RoomDTO to a new Room entity. Only the HotelId foreign key is set —
+    /// no new Hotel navigation object is fabricated, so EF Core resolves the
+    /// relationship purely through the FK without trying to insert a duplicate Hotel.
+    /// Same reasoning applies to Amenities: pass already-resolved Amenity rows in via
+    /// <paramref name="resolvedAmenities"/> instead of letting this mapper invent new ones.
+    /// </summary>
+    public static Room RoomToEntityMapper(this RoomDTO dto, IEnumerable<Amenity>? resolvedAmenities = null)
+    {
+        if (!Enum.TryParse<RoomType>(dto.RoomType, true, out var roomType))
+        {
+            throw new ArgumentException(
+                $"Invalid RoomType: '{dto.RoomType}'. Valid values are: {string.Join(", ", Enum.GetNames<RoomType>())}");
+        }
+
+        if (!Enum.TryParse<RoomStatus>(dto.Status, true, out var status))
+        {
+            status = RoomStatus.Available;
+        }
+
+        var room = new Room
         {
             RoomNumber = dto.RoomNumber,
-            RoomType = Enum.Parse<RoomType>(dto.RoomType, true),
-            Status = Enum.TryParse<RoomStatus>(dto.Status, true, out var status)
-             ? status : RoomStatus.Available,
+            RoomType = roomType,
+            Status = status,
             PricePerNight = dto.PricePerNight,
             Floor = dto.Floor,
             Capacity = dto.Capacity,
-            HotelId = dto.HotelId,
-            Hotel = new Hotel
-            {
-                Id = dto.HotelId,
-                Name = dto.HotelName
-            },
-            Amenities = dto.Amenities.Select(a => new Amenity
-            {
-                Name = a
-            }).ToList()
+            HotelId = dto.HotelId
         };
+
+        if (resolvedAmenities != null)
+        {
+            room.Amenities = resolvedAmenities.ToList();
+        }
+
+        return room;
     }
+
     public static RoomDTO RoomToDtoMapper(this Room room)
     {
         return new RoomDTO
@@ -66,23 +133,64 @@ public static class ExtensionMethod
             Floor = room.Floor,
             Capacity = room.Capacity,
             HotelId = room.HotelId,
-            HotelName = room.Hotel.Name,
-            Amenities = room.Amenities.Select(a => a.Name).ToList()
+            HotelName = room.Hotel?.Name ?? string.Empty,
+            // Safe-guard against missing .Include(r => r.Amenities).
+            Amenities = room.Amenities?.Select(a => a.Name).ToList() ?? []
         };
     }
-    public static RoomDTO MapRoomToDto(Room r) => new()
+
+    /// <summary>
+    /// Kept only for backward compatibility with existing call sites (e.g. LINQ
+    /// projections like `.Select(r => ExtensionMethod.MapRoomToDto(r))`).
+    /// Delegates to RoomToDtoMapper so there is a single source of truth for the mapping.
+    /// </summary>
+    public static RoomDTO MapRoomToDto(Room room) => room.RoomToDtoMapper();
+
+    /// <summary>
+    /// Applies partial updates from a RoomDTO onto an existing tracked Room.
+    /// RoomType/Status are validated and throw a clear ArgumentException on bad input
+    /// instead of letting an unhandled Enum.Parse exception crash the request.
+    /// Amenities are only replaced if resolvedAmenities is supplied (resolve them
+    /// in the repository — see notes on RoomToEntityMapper).
+    /// </summary>
+    public static Room ApplyUpdateTo(this RoomDTO dto, Room existingRoom, IEnumerable<Amenity>? resolvedAmenities = null)
     {
-        Id = r.Id,
-        RoomNumber = r.RoomNumber,
-        RoomType = r.RoomType.ToString(),
-        Status = r.Status.ToString(),
-        PricePerNight = r.PricePerNight,
-        Floor = r.Floor,
-        Capacity = r.Capacity,
-        HotelId = r.HotelId,
-        HotelName = r.Hotel?.Name ?? string.Empty,
-        Amenities = r.Amenities.Select(a => a.Name).ToList()
-    };
+        if (dto.RoomNumber != null) existingRoom.RoomNumber = dto.RoomNumber;
+
+        if (dto.RoomType != null)
+        {
+            if (!Enum.TryParse<RoomType>(dto.RoomType, true, out var roomType))
+            {
+                throw new ArgumentException(
+                    $"Invalid RoomType: '{dto.RoomType}'. Valid values are: {string.Join(", ", Enum.GetNames<RoomType>())}");
+            }
+            existingRoom.RoomType = roomType;
+        }
+
+        if (dto.Status != null)
+        {
+            existingRoom.Status = Enum.TryParse<RoomStatus>(dto.Status, true, out var status)
+                ? status
+                : RoomStatus.Available;
+        }
+
+        if (dto.PricePerNight != 0) existingRoom.PricePerNight = dto.PricePerNight;
+        if (dto.Floor != null) existingRoom.Floor = dto.Floor;
+        if (dto.Capacity != null) existingRoom.Capacity = dto.Capacity;
+        if (dto.HotelId != 0) existingRoom.HotelId = dto.HotelId;
+
+        if (resolvedAmenities != null)
+        {
+            existingRoom.Amenities = resolvedAmenities.ToList();
+        }
+
+        return existingRoom;
+    }
+
+    // ============================================================
+    // Guest
+    // ============================================================
+
     public static Guest GuestToEntityMapper(this GuestDTO dto)
     {
         return new Guest
@@ -96,6 +204,7 @@ public static class ExtensionMethod
             Address = dto.Address
         };
     }
+
     public static GuestDTO GuestToDtoMapper(this Guest guest)
     {
         return new GuestDTO
@@ -110,58 +219,17 @@ public static class ExtensionMethod
             Address = guest.Address
         };
     }
-    public static Hotel ApplyUpdateTo(this HotelDTO hotel, Hotel existinghotel)
+
+    public static Guest ApplyUpdateTo(this GuestDTO dto, Guest existingGuest)
     {
-        if (hotel.Name != null) existinghotel.Name = hotel.Name;
-        if (hotel.Address != null) existinghotel.Address = hotel.Address;
-        if (hotel.City != null) existinghotel.City = hotel.City;
-        if (hotel.Country != null) existinghotel.Country = hotel.Country;
-        if (hotel.PhoneNumber != null) existinghotel.PhoneNumber = hotel.PhoneNumber;
-        if (hotel.Email != null) existinghotel.Email = hotel.Email;
-        if (hotel.StarRating.HasValue) existinghotel.StarRating = hotel.StarRating.Value;
-        if (hotel.Amenities != null) existinghotel.Amenities = hotel.Amenities.Select(a => new Amenity
-        {
-            Name = a
-        }).ToList();
-
-        return existinghotel;
-
-    }
-    public static Room ApplyUpdateTo(this RoomDTO room, Room existingRoom)
-    {
-        if (room.RoomNumber != null) existingRoom.RoomNumber = room.RoomNumber;
-        if (room.RoomType != null) existingRoom.RoomType = Enum.Parse<RoomType>(room.RoomType, true);
-        if (room.Status != null) existingRoom.Status = Enum.TryParse<RoomStatus>(room.Status, true, out var status)
-            ? status : RoomStatus.Available;
-        if (room.PricePerNight != 0) existingRoom.PricePerNight = room.PricePerNight;
-        if (room.Floor != null) existingRoom.Floor = room.Floor;
-        if (room.Capacity != null) existingRoom.Capacity = room.Capacity;
-        if (room.HotelId != 0) existingRoom.HotelId = room.HotelId;
-        if (room.HotelName != null) existingRoom.Hotel = new Hotel
-        {
-            Id = room.HotelId,
-            Name = room.HotelName
-        };
-        if (room.Amenities != null) existingRoom.Amenities = room.Amenities.Select(a => new Amenity
-        {
-            Name = a
-        }).ToList();
-
-        return existingRoom;
-
-    }
-    public static Guest ApplyUpdateTo(this GuestDTO guest, Guest existingGuest)
-    {
-        if (guest.FirstName != null) existingGuest.FirstName = guest.FirstName;
-        if (guest.LastName != null) existingGuest.LastName = guest.LastName;
-        if (guest.Email != null) existingGuest.Email = guest.Email;
-        if (guest.PhoneNumber != null) existingGuest.PhoneNumber = guest.PhoneNumber;
-        if (guest.NationalIdOrPassport != null) existingGuest.NationalIdOrPassport = guest.NationalIdOrPassport;
-        if (guest.DateOfBirth != null) existingGuest.DateOfBirth = guest.DateOfBirth;
-        if (guest.Address != null) existingGuest.Address = guest.Address;
+        if (dto.FirstName != null) existingGuest.FirstName = dto.FirstName;
+        if (dto.LastName != null) existingGuest.LastName = dto.LastName;
+        if (dto.Email != null) existingGuest.Email = dto.Email;
+        if (dto.PhoneNumber != null) existingGuest.PhoneNumber = dto.PhoneNumber;
+        if (dto.NationalIdOrPassport != null) existingGuest.NationalIdOrPassport = dto.NationalIdOrPassport;
+        if (dto.DateOfBirth != null) existingGuest.DateOfBirth = dto.DateOfBirth;
+        if (dto.Address != null) existingGuest.Address = dto.Address;
 
         return existingGuest;
     }
-
-
 }
