@@ -2,18 +2,16 @@ using HotelManagement.DTOs;
 using HotelManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class RoomRepository(IGeneric<Room> roomInterface, ApplicationDbContext Context) : IRoomService
+public class RoomRepository(IGeneric<Room> roomInterface, ApplicationDbContext Context, IAmenityService amenityRepo) : IRoomService
 {
     public async Task<ServicesResponse> CreateAsync(RoomDTO dto)
     {
         var room = dto.RoomToEntityMapper();
-        if (dto.Amenities is { Count: > 0 })   // 2. لو فيه Amenities جاية من الـ request
-        {
-            room.Amenities = await Context.Amenities
-                .Where(a => dto.Amenities.Contains(a.Name))
-                .ToListAsync();                 // 3. هات الموجود فعلاً واربطه بالأوضة
-        }
 
+        if (dto.Amenities is { Count: > 0 })
+        {
+            room.Amenities = await amenityRepo.FindOrCreateAsync(dto.Amenities);
+        }
         var result = await roomInterface.CreateAsync(room);
 
         return result > 0 ? new ServicesResponse(true, "The Room Created Successfully")
@@ -91,7 +89,14 @@ public class RoomRepository(IGeneric<Room> roomInterface, ApplicationDbContext C
         {
             return new ServicesResponse(false, "Room not Found");
         }
+
         var updatedRoom = dto.ApplyUpdateTo(existingRoom);
+
+        if (dto.Amenities is { Count: > 0 })
+        {
+            updatedRoom.Amenities = await amenityRepo.FindOrCreateAsync(dto.Amenities);
+        }
+
         var result = await roomInterface.UpdateAsync(updatedRoom);
         return result > 0 ? new ServicesResponse(true, "Room updated successfully ")
         : new ServicesResponse(true, "Room not updated  ");
