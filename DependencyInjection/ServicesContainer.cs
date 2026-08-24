@@ -87,6 +87,8 @@ public static class ServicesContainer
         services.AddScoped<IAmenityService, AmenityRepository>();
         services.AddScoped<IEmployeeService, EmployeeRepository>();
         services.AddScoped<EmployeeService>();
+        services.AddScoped<IReservationService, ReservationRepository>();
+        services.AddScoped<ReservationService>();
 
         return services;
     }

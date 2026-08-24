@@ -38,6 +38,7 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
             return new ServicesResponse(false, "Reservation not found");
         }
         reservation.Status = ReservationStatus.CheckedOut;
+        reservation.TotalAmount = (reservation.CheckOutDate.Day - reservation.CheckInDate.Day) * 300;
         var result = await reservationInterface.UpdateAsync(reservation);
         return result > 0 ? new ServicesResponse(true, "The Reservation Checked Out Successfully")
            : new ServicesResponse(false, "The Reservation Check Out Failed");
@@ -83,6 +84,7 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
         {
             return [];
         }
+
         var reservations = result.Select(reservation => reservation.ReservationToDtoMapper());
         return reservations;
     }
