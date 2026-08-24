@@ -285,4 +285,67 @@ public static class ExtensionMethod
 
         return existingEmployee;
     }
+    // ============================================================
+    // Reservation
+    // ============================================================
+
+    public static Reservation ReservationToEntityMapper(this CreateReservationRequestDTO dto)
+    {
+        return new Reservation
+        {
+            CheckInDate = dto.CheckInDate,
+            CheckOutDate = dto.CheckOutDate,
+            NumberOfGuests = dto.NumberOfGuests,
+            SpecialRequests = dto.SpecialRequests,
+            GuestId = dto.GuestId,
+            RoomId = dto.RoomId
+        };
+    }
+
+    public static CreateReservationRequestDTO ReservationToRequestDTOMapper(this Reservation reservation)
+    {
+        return new CreateReservationRequestDTO
+        {
+
+            CheckInDate = reservation.CheckInDate,
+            CheckOutDate = reservation.CheckOutDate,
+            NumberOfGuests = reservation.NumberOfGuests,
+            SpecialRequests = reservation.SpecialRequests,
+
+            GuestId = reservation.GuestId,
+            RoomId = reservation.RoomId,
+            // Safe-guard: if the caller forgot .Include(r => r.Guest),
+            // reservation.Guest may be null instead of an empty collection.
+        };
+    }
+    public static ReservationDTO ReservationToDtoMapper(this Reservation reservation)
+    {
+        return new ReservationDTO
+        {
+            Id = reservation.Id,
+            CheckInDate = reservation.CheckInDate,
+            CheckOutDate = reservation.CheckOutDate,
+            NumberOfGuests = reservation.NumberOfGuests,
+            Status = reservation.Status.ToString(),
+            TotalAmount = reservation.TotalAmount,
+            SpecialRequests = reservation.SpecialRequests,
+            CreatedAt = reservation.CreatedAt,
+            GuestId = reservation.GuestId,
+            RoomId = reservation.RoomId,
+            // Safe-guard: if the caller forgot .Include(r => r.Guest),
+            // reservation.Guest may be null instead of an empty collection.
+        };
+    }
+
+    public static Reservation ApplyUpdateTo(this CreateReservationRequestDTO dto, Reservation existingReservation)
+    {
+
+        if (dto.SpecialRequests != null) existingReservation.SpecialRequests = dto.SpecialRequests;
+        if (dto.NumberOfGuests != null) existingReservation.NumberOfGuests = dto.NumberOfGuests;
+        if (!string.IsNullOrEmpty(dto.SpecialRequests)) existingReservation.SpecialRequests = dto.SpecialRequests;
+        if (dto.GuestId != 0) existingReservation.GuestId = dto.GuestId;
+        if (dto.RoomId != 0) existingReservation.RoomId = dto.RoomId;
+
+        return existingReservation;
+    }
 }
