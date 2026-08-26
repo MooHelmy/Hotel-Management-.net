@@ -139,9 +139,7 @@ public static class ExtensionMethod
         };
     }
 
-
     public static RoomDTO MapRoomToDto(Room room) => room.RoomToDtoMapper();
-
 
     public static Room ApplyUpdateTo(this RoomDTO dto, Room existingRoom, IEnumerable<Amenity>? resolvedAmenities = null)
     {
@@ -222,6 +220,7 @@ public static class ExtensionMethod
 
         return existingGuest;
     }
+
     // ============================================================
     // Employee
     // ============================================================
@@ -256,7 +255,6 @@ public static class ExtensionMethod
             Salary = employee.Salary,
             HireDate = employee.HireDate,
             HotelId = employee.HotelId,
-
         };
     }
 
@@ -274,6 +272,7 @@ public static class ExtensionMethod
 
         return existingEmployee;
     }
+
     // ============================================================
     // Reservation
     // ============================================================
@@ -287,7 +286,11 @@ public static class ExtensionMethod
             NumberOfGuests = dto.NumberOfGuests,
             SpecialRequests = dto.SpecialRequests,
             GuestId = dto.GuestId,
-            RoomId = dto.RoomId
+            RoomId = dto.RoomId,
+            // كل حجز جديد بيبدأ بحالة Pending وبدون مبلغ محدد،
+            // المبلغ بيتحسب فعليًا وقت الـ CheckOut
+            Status = ReservationStatus.Pending,
+            TotalAmount = 0
         };
     }
 
@@ -295,18 +298,15 @@ public static class ExtensionMethod
     {
         return new CreateReservationRequestDTO
         {
-
             CheckInDate = reservation.CheckInDate,
             CheckOutDate = reservation.CheckOutDate,
             NumberOfGuests = reservation.NumberOfGuests,
             SpecialRequests = reservation.SpecialRequests,
-
             GuestId = reservation.GuestId,
             RoomId = reservation.RoomId,
-            // Safe-guard: if the caller forgot .Include(r => r.Guest),
-            // reservation.Guest may be null instead of an empty collection.
         };
     }
+
     public static ReservationDTO ReservationToDtoMapper(this Reservation reservation)
     {
         return new ReservationDTO
@@ -319,17 +319,30 @@ public static class ExtensionMethod
             TotalAmount = reservation.TotalAmount,
             SpecialRequests = reservation.SpecialRequests,
             CreatedAt = reservation.CreatedAt,
+
             GuestId = reservation.GuestId,
-            RoomId = reservation.RoomId,
             // Safe-guard: if the caller forgot .Include(r => r.Guest),
-            // reservation.Guest may be null instead of an empty collection.
+            // reservation.Guest may be null instead of populated.
+            GuestFullName = reservation.Guest != null
+                ? $"{reservation.Guest.FirstName} {reservation.Guest.LastName}"
+                : string.Empty,
+
+            RoomId = reservation.RoomId,
+            // Safe-guard: if the caller forgot .Include(r => r.Room),
+            // reservation.Room may be null instead of populated.
+            RoomNumber = reservation.Room?.RoomNumber ?? string.Empty,
+            RoomType = reservation.Room?.RoomType.ToString() ?? string.Empty,
+
+            // Safe-guard: if the caller forgot .Include(r => r.Payment),
+            // reservation.Payment may be null instead of populated.
+            Payment = reservation.Payment?.PaymentToDtoMapper()
         };
     }
 
     public static Reservation ApplyUpdateTo(this CreateReservationRequestDTO dto, Reservation existingReservation)
     {
-
-        if (dto.SpecialRequests != null) existingReservation.SpecialRequests = dto.SpecialRequests;
+        if (dto.CheckInDate != default) existingReservation.CheckInDate = dto.CheckInDate;
+        if (dto.CheckOutDate != default) existingReservation.CheckOutDate = dto.CheckOutDate;
         if (dto.NumberOfGuests != null) existingReservation.NumberOfGuests = dto.NumberOfGuests;
         if (!string.IsNullOrEmpty(dto.SpecialRequests)) existingReservation.SpecialRequests = dto.SpecialRequests;
         if (dto.GuestId != 0) existingReservation.GuestId = dto.GuestId;
@@ -337,6 +350,7 @@ public static class ExtensionMethod
 
         return existingReservation;
     }
+
     // ============================================================
     // Payment
     // ============================================================
@@ -388,5 +402,4 @@ public static class ExtensionMethod
 
         return existingPayment;
     }
-
 }

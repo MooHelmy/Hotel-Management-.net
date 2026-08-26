@@ -1,8 +1,10 @@
 using HotelManagement.Entities;
 using Microsoft.AspNetCore.Mvc;
-
+[ApiController]
+[Route("api/[controller]")]
 public class PaymentController(IPaymentService paymentService) : ControllerBase
 {
+    [HttpGet("ByReservation/{reservationId}")]
     public async Task<IActionResult> GetByReservation(int reservationId)
     {
         var payment = await paymentService.GetByReservationAsync(reservationId);
@@ -12,7 +14,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase
         }
         return BadRequest(payment.Message);
     }
-
+    [HttpPost("Pay")]
     public async Task<IActionResult> Pay(int reservationId, decimal amount, PaymentMethod method, string? transactionReference)
     {
         var payment = await paymentService.PayAsync(reservationId, amount, method, transactionReference);
@@ -22,7 +24,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase
         }
         return BadRequest(payment.Message);
     }
-
+    [HttpPost("Refund")]
     public async Task<IActionResult> Refund(int reservationId)
     {
         try

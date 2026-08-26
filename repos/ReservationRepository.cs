@@ -32,13 +32,19 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
 
     public async Task<ServicesResponse> CheckOutAsync(int id)
     {
-        var reservation = await Context.Reservations.FindAsync(id);
+        var reservation = await Context.Reservations
+            .Include(r => r.Room)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
         if (reservation == null)
         {
             return new ServicesResponse(false, "Reservation not found");
         }
+
+        var nights = (reservation.CheckOutDate.Date - reservation.CheckInDate.Date).Days;
+        reservation.TotalAmount = nights * reservation.Room.PricePerNight;
         reservation.Status = ReservationStatus.CheckedOut;
-        reservation.TotalAmount = (reservation.CheckOutDate.Day - reservation.CheckInDate.Day) * 300;
+
         var result = await reservationInterface.UpdateAsync(reservation);
         return result > 0 ? new ServicesResponse(true, "The Reservation Checked Out Successfully")
            : new ServicesResponse(false, "The Reservation Check Out Failed");
@@ -79,7 +85,7 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
 
     public async Task<IEnumerable<ReservationDTO>> GetAllAsync()
     {
-        var result = await reservationInterface.GetAllAsync(r => r.Guest, r => r.Room);
+        var result = await reservationInterface.GetAllAsync(r => r.Guest, r => r.Room, r => r.Payment!);
         if (!result.Any())
         {
             return [];
@@ -94,6 +100,7 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
         var query = Context.Reservations
                 .Include(r => r.Guest)
                 .Include(r => r.Room)
+                .Include(r => r.Payment)
                 .Where(r => r.GuestId == guestId);
         if (!query.Any())
         {
@@ -104,7 +111,7 @@ public class ReservationRepository(IGeneric<Reservation> reservationInterface, A
 
     public async Task<ReservationDTO?> GetByIdAsync(int id)
     {
-        var result = await reservationInterface.GetByIdAsync(id, r => r.Guest, r => r.Room);
+        var result = await reservationInterface.GetByIdAsync(id, r => r.Guest, r => r.Room, r => r.Payment!);
         if (result == null)
         {
             throw new ItemNotFoundException($"Reservation with id {id} not found");
