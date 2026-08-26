@@ -1,8 +1,10 @@
 using HotelManagement.DTOs;
 using HotelManagement.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin, Manager")]
 public class ReservationController(IReservationService reservationService) : ControllerBase
 {
     [HttpGet("All")]

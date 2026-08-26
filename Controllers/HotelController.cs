@@ -1,17 +1,23 @@
 using HotelManagement.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin, Manager")]
 public class HotelController(IHotelService hotelService) : ControllerBase
 
 {
+
     [HttpGet("All")]
+    [AllowAnonymous]
     public async Task<ActionResult> GetAllAsync()
     {
         var hotels = await hotelService.GetAllAsync();
         return hotels.Any() ? Ok(hotels) : NotFound(hotels);
     }
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult> GetByIdAsync(int id)
     {
         var hotel = await hotelService.GetByIdAsync(id);

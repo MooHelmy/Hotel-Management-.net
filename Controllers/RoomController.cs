@@ -1,8 +1,10 @@
 using HotelManagement.DTOs;
 using HotelManagement.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin, Manager")]
 public class RoomController(IRoomService roomService) : ControllerBase
 {
     [HttpGet("All")]
@@ -12,6 +14,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
         return rooms.Any() ? Ok(rooms) : NotFound(rooms);
     }
     [HttpGet("{id}")]
+
     public async Task<ActionResult> GetByIdAsync(int id)
     {
         var room = await roomService.GetByIdAsync(id);

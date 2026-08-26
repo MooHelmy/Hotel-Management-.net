@@ -1,7 +1,9 @@
 using HotelManagement.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin, Manager")]
 public class PaymentController(IPaymentService paymentService) : ControllerBase
 {
     [HttpGet("ByReservation/{reservationId}")]
