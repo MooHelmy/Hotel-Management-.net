@@ -5,8 +5,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddServices(builder.Configuration);// Configure the HTTP request pipeline.
 builder.Services.AddControllers();
-var app = builder.Build();
 
+var app = builder.Build();
+await IdentitySeeder.SeedRolesAndAdminAsync(app.Services);
 if (app.Environment.IsDevelopment())
 {
 
