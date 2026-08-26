@@ -139,20 +139,10 @@ public static class ExtensionMethod
         };
     }
 
-    /// <summary>
-    /// Kept only for backward compatibility with existing call sites (e.g. LINQ
-    /// projections like `.Select(r => ExtensionMethod.MapRoomToDto(r))`).
-    /// Delegates to RoomToDtoMapper so there is a single source of truth for the mapping.
-    /// </summary>
+
     public static RoomDTO MapRoomToDto(Room room) => room.RoomToDtoMapper();
 
-    /// <summary>
-    /// Applies partial updates from a RoomDTO onto an existing tracked Room.
-    /// RoomType/Status are validated and throw a clear ArgumentException on bad input
-    /// instead of letting an unhandled Enum.Parse exception crash the request.
-    /// Amenities are only replaced if resolvedAmenities is supplied (resolve them
-    /// in the repository — see notes on RoomToEntityMapper).
-    /// </summary>
+
     public static Room ApplyUpdateTo(this RoomDTO dto, Room existingRoom, IEnumerable<Amenity>? resolvedAmenities = null)
     {
         if (dto.RoomNumber != null) existingRoom.RoomNumber = dto.RoomNumber;
@@ -266,8 +256,7 @@ public static class ExtensionMethod
             Salary = employee.Salary,
             HireDate = employee.HireDate,
             HotelId = employee.HotelId,
-            // Safe-guard: if the caller forgot .Include(e => e.Hotel),
-            // employee.Hotel may be null instead of an empty collection.
+
         };
     }
 
@@ -348,4 +337,56 @@ public static class ExtensionMethod
 
         return existingReservation;
     }
+    // ============================================================
+    // Payment
+    // ============================================================
+
+    public static Payment PaymentToEntityMapper(this PaymentDTO dto)
+    {
+        return new Payment
+        {
+            ReservationId = dto.ReservationId,
+            Amount = dto.Amount,
+            PaymentMethod = Enum.TryParse<PaymentMethod>(dto.PaymentMethod, true, out var method)
+                ? method
+                : throw new ArgumentException($"Invalid PaymentMethod value: {dto.PaymentMethod}"),
+            Status = Enum.TryParse<PaymentStatus>(dto.Status, true, out var status)
+                ? status
+                : throw new ArgumentException($"Invalid Status value: {dto.Status}"),
+            TransactionReference = dto.TransactionReference,
+            PaidAt = dto.PaidAt
+        };
+    }
+
+    public static PaymentDTO PaymentToDtoMapper(this Payment payment)
+    {
+        return new PaymentDTO
+        {
+            Id = payment.Id,
+            ReservationId = payment.ReservationId,
+            Amount = payment.Amount,
+            PaymentMethod = payment.PaymentMethod.ToString(),
+            Status = payment.Status.ToString(),
+            TransactionReference = payment.TransactionReference,
+            PaidAt = payment.PaidAt
+        };
+    }
+
+    public static Payment ApplyUpdateTo(this PaymentDTO dto, Payment existingPayment)
+    {
+        if (dto.ReservationId != 0) existingPayment.ReservationId = dto.ReservationId;
+        if (dto.Amount != 0) existingPayment.Amount = dto.Amount;
+
+        if (!string.IsNullOrEmpty(dto.PaymentMethod))
+            existingPayment.PaymentMethod = Enum.Parse<PaymentMethod>(dto.PaymentMethod, ignoreCase: true);
+
+        if (!string.IsNullOrEmpty(dto.Status))
+            existingPayment.Status = Enum.Parse<PaymentStatus>(dto.Status, ignoreCase: true);
+
+        if (!string.IsNullOrEmpty(dto.TransactionReference))
+            existingPayment.TransactionReference = dto.TransactionReference;
+
+        return existingPayment;
+    }
+
 }
