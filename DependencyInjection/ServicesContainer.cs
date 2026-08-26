@@ -89,6 +89,8 @@ public static class ServicesContainer
         services.AddScoped<EmployeeService>();
         services.AddScoped<IReservationService, ReservationRepository>();
         services.AddScoped<ReservationService>();
+        services.AddScoped<IPaymentService, PaymentRepository>();
+        services.AddScoped<PaymentService>();
 
         return services;
     }

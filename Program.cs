@@ -13,7 +13,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
+app.UseGlobalExceptionHandling();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 
